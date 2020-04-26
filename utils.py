@@ -24,8 +24,8 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-
 import datasets as dset
+import torch_xla.core.xla_model as xm
 
 def prepare_parser():
   usage = 'Parser for all scripts.'
@@ -571,7 +571,12 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
   if use_multiepoch_sampler:
     print('Using multiepoch sampler from start_itr %d...' % start_itr)
     loader_kwargs = {'num_workers': num_workers, 'pin_memory': pin_memory}
-    sampler = MultiEpochSampler(train_set, num_epochs, start_itr, batch_size)
+    # sampler = MultiEpochSampler(train_set, num_epochs, start_itr, batch_size)
+    sampler = torch.utils.data.distributed.DistributedSampler(
+      train_set,
+      num_replicas=xm.xrt_world_size(),
+      rank=xm.get_ordinal(),
+      shuffle=True)
     train_loader = DataLoader(train_set, batch_size=batch_size,
                               sampler=sampler, **loader_kwargs)
   else:
