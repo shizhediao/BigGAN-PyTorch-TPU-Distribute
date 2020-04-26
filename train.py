@@ -142,7 +142,7 @@ def run(config):
                   * config['num_D_accumulations'])
   loaders = utils.get_data_loaders(**{**config, 'batch_size': D_batch_size,
                                       'start_itr': state_dict['itr']})[0]
-
+  total_num_examples = len(loaders)
   # Prepare inception metrics: FID and IS
   get_inception_metrics = inception_utils.prepare_inception_metrics(device, config['dataset'], config['parallel'], config['no_fid'])
 
@@ -179,11 +179,11 @@ def run(config):
     para_loader = pl.ParallelLoader(loaders, [device])
     loader = para_loader.per_device_loader(device)
     # Which progressbar to use? TQDM or my own?
-    # if config['pbar'] == 'mine':
-    #   pbar = utils.progress(loader,displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
-    # else:
-    #   pbar = tqdm(loader)
-    for i, (x, y) in enumerate(loader):
+    if config['pbar'] == 'mine':
+      pbar = utils.progress(loader, total= total_num_examples, displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
+    else:
+      pbar = tqdm(loader)
+    for i, (x, y) in enumerate(pbar):
       # Increment the iteration counter
       state_dict['itr'] += 1
       # Make sure G and D are in training mode, just in case they got set to eval
