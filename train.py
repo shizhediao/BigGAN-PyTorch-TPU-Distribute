@@ -142,8 +142,7 @@ def run(config):
                   * config['num_D_accumulations'])
   loaders = utils.get_data_loaders(**{**config, 'batch_size': D_batch_size,
                                       'start_itr': state_dict['itr']})[0]
-  para_loader = pl.ParallelLoader(loaders, [device])
-  loader = para_loader.per_device_loader(device)
+
   # Prepare inception metrics: FID and IS
   get_inception_metrics = inception_utils.prepare_inception_metrics(device, config['dataset'], config['parallel'], config['no_fid'])
 
@@ -176,7 +175,9 @@ def run(config):
   print('Beginning training at epoch %d...' % state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
   for epoch in range(state_dict['epoch'], config['num_epochs']):
-    print("Epoch: ", epoch)
+    # print("Epoch: ", epoch)
+    para_loader = pl.ParallelLoader(loaders, [device])
+    loader = para_loader.per_device_loader(device)
     # Which progressbar to use? TQDM or my own?
     # if config['pbar'] == 'mine':
     #   pbar = utils.progress(loader,displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
@@ -199,7 +200,7 @@ def run(config):
       metrics = train(x, y)
       # xm.master_print('Iter: {}, metric {}'.format(
       #   i, metrics))
-      print("Iter: ", i, "metric: ", metrics)
+      print("Epoch: ", epoch, ", Iter: ", i, "metric: ", metrics)
       # train_log.log(itr=int(state_dict['itr']), **metrics)
       
       # Every sv_log_interval, log singular values
