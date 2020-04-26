@@ -29,7 +29,12 @@ import losses
 import train_fns
 from sync_batchnorm import patch_replication_callback
 import torch_xla
+import torch_xla.distributed.parallel_loader as pl
+import torch_xla.utils.utils as xu
 import torch_xla.core.xla_model as xm
+import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.test.test_utils as test_utils
+
 
 
 # The main training file. Config is a dictionary specifying the configuration
@@ -109,10 +114,11 @@ def run(config):
                        G_ema if config['ema'] else None)
 
   # If parallel, parallelize the GD module
-  if config['parallel']:
-    GD = nn.DataParallel(GD)
-    if config['cross_replica']:
-      patch_replication_callback(GD)
+  # if config['parallel']:
+  #   GD = nn.DataParallel(GD)
+  #   if config['cross_replica']:
+  #     patch_replication_callback(GD)
+  GD = GD.to(device)
 
   # Prepare loggers for stats; metrics holds test metrics,
   # lmetrics holds any desired training metrics.
@@ -136,7 +142,8 @@ def run(config):
                   * config['num_D_accumulations'])
   loaders = utils.get_data_loaders(**{**config, 'batch_size': D_batch_size,
                                       'start_itr': state_dict['itr']})
-
+  para_loader = pl.ParallelLoader(loaders, [device])
+  loader = para_loader.per_device_loader(device)
   # Prepare inception metrics: FID and IS
   get_inception_metrics = inception_utils.prepare_inception_metrics(device, config['dataset'], config['parallel'], config['no_fid'])
 
@@ -171,9 +178,9 @@ def run(config):
   for epoch in range(state_dict['epoch'], config['num_epochs']):    
     # Which progressbar to use? TQDM or my own?
     if config['pbar'] == 'mine':
-      pbar = utils.progress(loaders[0],displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
+      pbar = utils.progress(loader[0],displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
     else:
-      pbar = tqdm(loaders[0])
+      pbar = tqdm(loader[0])
     for i, (x, y) in enumerate(pbar):
       # Increment the iteration counter
       state_dict['itr'] += 1
@@ -222,7 +229,15 @@ def run(config):
     state_dict['epoch'] += 1
 
 
-def main():
+# def main():
+#   # parse command line and run
+#   parser = utils.prepare_parser()
+#   config = vars(parser.parse_args())
+#   print(config)
+#   run(config)
+
+def _mp_fn(index):
+  torch.set_default_tensor_type('torch.FloatTensor')
   # parse command line and run
   parser = utils.prepare_parser()
   config = vars(parser.parse_args())
@@ -230,4 +245,5 @@ def main():
   run(config)
 
 if __name__ == '__main__':
-  main()
+  # main()
+  xmp.spawn(_mp_fn, args=())

@@ -59,7 +59,8 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
         utils.ortho(D, config['D_ortho'])
       
       # D.optim.step()
-      xm.optimizer_step(D.optim, barrier=True)
+      # xm.optimizer_step(D.optim, barrier=True)
+      xm.optimizer_step(D.optim)
 
       # Optionally toggle "requires_grad"
     if config['toggle_grads']:
@@ -86,7 +87,9 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
       utils.ortho(G, config['G_ortho'], 
                   blacklist=[param for param in G.shared.parameters()])
     # G.optim.step()
-    xm.optimizer_step(G.optim, barrier=True)
+    # xm.optimizer_step(G.optim, barrier=True)
+    xm.optimizer_step(G.optim)
+
     # If we have an ema, update it, regardless of if we test with it or not
     if config['ema']:
       ema.update(state_dict['itr'])
