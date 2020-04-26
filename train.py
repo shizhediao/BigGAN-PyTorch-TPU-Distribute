@@ -197,8 +197,9 @@ def run(config):
       #   x, y = x.to(device), y.to(device)
       x, y = x.to(device), y.to(device)
       metrics = train(x, y)
-      xm.master_print('Iter: {}, metric {}'.format(
-        i, metrics))
+      # xm.master_print('Iter: {}, metric {}'.format(
+      #   i, metrics))
+      print("Iter: ", i, "metric: ", metrics)
       # train_log.log(itr=int(state_dict['itr']), **metrics)
       
       # Every sv_log_interval, log singular values
