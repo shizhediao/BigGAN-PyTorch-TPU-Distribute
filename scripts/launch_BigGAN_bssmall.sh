@@ -1,6 +1,6 @@
 #!/bin/bash
 python train.py \
---dataset I128_hdf5 --shuffle  --num_workers 8 --batch_size 8 --load_in_mem  \
+--dataset I128_hdf5 --shuffle  --num_workers 1 --batch_size 8 --load_in_mem  \
 --num_G_accumulations 8 --num_D_accumulations 8 \
 --num_D_steps 1 --G_lr 1e-4 --D_lr 4e-4 --D_B2 0.999 --G_B2 0.999 \
 --G_attn 64 --D_attn 64 \

@@ -41,6 +41,9 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
         # y_.sample_()
         utils.distri_sample_(z_)
         utils.distri_sample_(y_)
+        print("x: ", x)
+        print("y: ", y)
+        print("counter: ", counter)
         D_fake, D_real = GD(z_[:config['batch_size']], y_[:config['batch_size']], 
                             x[counter], y[counter], train_G=False, 
                             split_D=config['split_D'])
