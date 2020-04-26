@@ -175,7 +175,8 @@ def run(config):
 
   print('Beginning training at epoch %d...' % state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
-  for epoch in range(state_dict['epoch'], config['num_epochs']):    
+  for epoch in range(state_dict['epoch'], config['num_epochs']):
+    print("Epoch: ", epoch)
     # Which progressbar to use? TQDM or my own?
     # if config['pbar'] == 'mine':
     #   pbar = utils.progress(loader,displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
@@ -190,41 +191,44 @@ def run(config):
       D.train()
       if config['ema']:
         G_ema.train()
-      if config['D_fp16']:
-        x, y = x.to(device).half(), y.to(device)
-      else:
-        x, y = x.to(device), y.to(device)
+      # if config['D_fp16']:
+      #   x, y = x.to(device).half(), y.to(device)
+      # else:
+      #   x, y = x.to(device), y.to(device)
+      x, y = x.to(device), y.to(device)
       metrics = train(x, y)
-      train_log.log(itr=int(state_dict['itr']), **metrics)
+      xm.master_print('Iter: {}, metric {}'.format(
+        i, metrics))
+      # train_log.log(itr=int(state_dict['itr']), **metrics)
       
       # Every sv_log_interval, log singular values
-      if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
-        train_log.log(itr=int(state_dict['itr']), 
-                      **{**utils.get_SVs(G, 'G'), **utils.get_SVs(D, 'D')})
+      # if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
+      #   train_log.log(itr=int(state_dict['itr']),
+      #                 **{**utils.get_SVs(G, 'G'), **utils.get_SVs(D, 'D')})
 
       # If using my progbar, print metrics.
-      if config['pbar'] == 'mine':
-          print(', '.join(['itr: %d' % state_dict['itr']] 
-                           + ['%s : %+4.3f' % (key, metrics[key])
-                           for key in metrics]), end=' ')
+      # if config['pbar'] == 'mine':
+      #     print(', '.join(['itr: %d' % state_dict['itr']]
+      #                      + ['%s : %+4.3f' % (key, metrics[key])
+      #                      for key in metrics]), end=' ')
 
       # Save weights and copies as configured at specified interval
-      if not (state_dict['itr'] % config['save_every']):
-        if config['G_eval_mode']:
-          print('Switchin G to eval mode...')
-          G.eval()
-          if config['ema']:
-            G_ema.eval()
-        train_fns.save_and_sample(device, G, D, G_ema, z_, y_, fixed_z, fixed_y,
-                                  state_dict, config, experiment_name)
-
-      # Test every specified interval
-      if not (state_dict['itr'] % config['test_every']):
-        if config['G_eval_mode']:
-          print('Switchin G to eval mode...')
-          G.eval()
-        train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
-                       get_inception_metrics, experiment_name, test_log)
+      # if not (state_dict['itr'] % config['save_every']):
+      #   if config['G_eval_mode']:
+      #     print('Switchin G to eval mode...')
+      #     G.eval()
+      #     if config['ema']:
+      #       G_ema.eval()
+      #   train_fns.save_and_sample(device, G, D, G_ema, z_, y_, fixed_z, fixed_y,
+      #                             state_dict, config, experiment_name)
+      #
+      # # Test every specified interval
+      # if not (state_dict['itr'] % config['test_every']):
+      #   if config['G_eval_mode']:
+      #     print('Switchin G to eval mode...')
+      #     G.eval()
+      #   train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
+      #                  get_inception_metrics, experiment_name, test_log)
     # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
 
