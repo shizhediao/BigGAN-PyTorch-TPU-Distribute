@@ -581,8 +581,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
     train_loader = DataLoader(train_set, batch_size=batch_size,
                               shuffle=False, sampler=sampler, drop_last=True, **loader_kwargs)
   else:
-    loader_kwargs = {'num_workers': num_workers, 'pin_memory': pin_memory,
-                     'drop_last': drop_last} # Default, drop last incomplete batch
+    loader_kwargs = {'num_workers': num_workers, 'pin_memory': pin_memory} # Default, drop last incomplete batch
     sampler = torch.utils.data.distributed.DistributedSampler(
       train_set,
       num_replicas=xm.xrt_world_size(),
@@ -590,7 +589,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       shuffle=shuffle)
     #in dataloader the shuffle=False because in sampler there is shufflt. Attention: There is drop last
     train_loader = DataLoader(train_set, batch_size=batch_size,
-                              shuffle=False, sampler=sampler, **loader_kwargs)
+                              shuffle=False, sampler=sampler, drop_last=True, **loader_kwargs)
   loaders.append(train_loader)
   return loaders
 
