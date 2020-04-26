@@ -576,8 +576,8 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       train_set,
       num_replicas=xm.xrt_world_size(),
       rank=xm.get_ordinal(),
-      shuffle=True)
-    #in dataloader the shuffle=False because in sampler it is true
+      shuffle=shuffle)
+    #in dataloader the shuffle=False because in sampler there is shufflt
     train_loader = DataLoader(train_set, batch_size=batch_size,
                               shuffle=False, sampler=sampler, drop_last=True, **loader_kwargs)
   else:
@@ -588,8 +588,9 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       num_replicas=xm.xrt_world_size(),
       rank=xm.get_ordinal(),
       shuffle=shuffle)
+    #in dataloader the shuffle=False because in sampler there is shufflt
     train_loader = DataLoader(train_set, batch_size=batch_size,
-                              sampler=sampler, drop_last=True, **loader_kwargs)
+                              shuffle=False, sampler=sampler, drop_last=True, **loader_kwargs)
   loaders.append(train_loader)
   return loaders
 
