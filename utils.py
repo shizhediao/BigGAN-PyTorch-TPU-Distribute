@@ -577,8 +577,9 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
       num_replicas=xm.xrt_world_size(),
       rank=xm.get_ordinal(),
       shuffle=True)
+    #in dataloader the shuffle=False because in sampler it is true
     train_loader = DataLoader(train_set, batch_size=batch_size,
-                              sampler=sampler, drop_last=True, **loader_kwargs)
+                              shuffle=False, sampler=sampler, drop_last=True, **loader_kwargs)
   else:
     loader_kwargs = {'num_workers': num_workers, 'pin_memory': pin_memory,
                      'drop_last': drop_last} # Default, drop last incomplete batch
