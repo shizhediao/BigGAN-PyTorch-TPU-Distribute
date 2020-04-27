@@ -172,7 +172,7 @@ def run(config):
                                  else G),
                               z_=z_, y_=y_, config=config)
 
-  print('Beginning training at epoch %d...' % state_dict['epoch'])
+  print("Device: ", xm.get_ordinal(), 'Beginning training at epoch %d...', state_dict['epoch'])
   # Train for specified number of epochs, although we mostly track G iterations.
   for epoch in range(state_dict['epoch'], config['num_epochs']):
     # print("Epoch: ", epoch)
@@ -200,7 +200,7 @@ def run(config):
       metrics = train(x, y)
       # xm.master_print('Iter: {}, metric {}'.format(
       #   i, metrics))
-      print("Device", device, "Epoch: ", epoch, ", Iter: ", i, "metric: ", metrics)
+      print("Device", xm.get_ordinal(), "Epoch: ", epoch, ", Iter: ", i, "metric: ", metrics)
 
       if xm.is_master_ordinal():
         train_log.log(itr=int(state_dict['itr']), **metrics)
