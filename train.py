@@ -201,37 +201,39 @@ def run(config):
       # xm.master_print('Iter: {}, metric {}'.format(
       #   i, metrics))
       print("Device", device, "Epoch: ", epoch, ", Iter: ", i, "metric: ", metrics)
-      # train_log.log(itr=int(state_dict['itr']), **metrics)
-      
-      # Every sv_log_interval, log singular values
-      # if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
-      #   train_log.log(itr=int(state_dict['itr']),
-      #                 **{**utils.get_SVs(G, 'G'), **utils.get_SVs(D, 'D')})
 
-      # If using my progbar, print metrics.
-      # if config['pbar'] == 'mine':
-      #     print(', '.join(['itr: %d' % state_dict['itr']]
-      #                      + ['%s : %+4.3f' % (key, metrics[key])
-      #                      for key in metrics]), end=' ')
+      if xm.is_master_ordinal():
+        train_log.log(itr=int(state_dict['itr']), **metrics)
 
-      # Save weights and copies as configured at specified interval
-      # if not (state_dict['itr'] % config['save_every']):
-      #   if config['G_eval_mode']:
-      #     print('Switchin G to eval mode...')
-      #     G.eval()
-      #     if config['ema']:
-      #       G_ema.eval()
-      #   train_fns.save_and_sample(device, G, D, G_ema, z_, y_, fixed_z, fixed_y,
-      #                             state_dict, config, experiment_name)
-      #
-      # # Test every specified interval
-      # if not (state_dict['itr'] % config['test_every']):
-      #   if config['G_eval_mode']:
-      #     print('Switchin G to eval mode...')
-      #     G.eval()
-      #   train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
-      #                  get_inception_metrics, experiment_name, test_log)
-    # Increment epoch counter at end of epoch
+        # Every sv_log_interval, log singular values
+        if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
+          train_log.log(itr=int(state_dict['itr']),
+                        **{**utils.get_SVs(G, 'G'), **utils.get_SVs(D, 'D')})
+
+        # If using my progbar, print metrics.
+        if config['pbar'] == 'mine':
+            print(', '.join(['itr: %d' % state_dict['itr']]
+                             + ['%s : %+4.3f' % (key, metrics[key])
+                             for key in metrics]), end=' ')
+
+        # Save weights and copies as configured at specified interval
+        if not (state_dict['itr'] % config['save_every']):
+          if config['G_eval_mode']:
+            print('Switchin G to eval mode...')
+            G.eval()
+            if config['ema']:
+              G_ema.eval()
+          train_fns.save_and_sample(device, G, D, G_ema, z_, y_, fixed_z, fixed_y,
+                                    state_dict, config, experiment_name)
+        #
+        # # Test every specified interval
+        # if not (state_dict['itr'] % config['test_every']):
+        #   if config['G_eval_mode']:
+        #     print('Switchin G to eval mode...')
+        #     G.eval()
+        #   train_fns.test(G, D, G_ema, z_, y_, state_dict, config, sample,
+        #                  get_inception_metrics, experiment_name, test_log)
+      # Increment epoch counter at end of epoch
     state_dict['epoch'] += 1
 
 
