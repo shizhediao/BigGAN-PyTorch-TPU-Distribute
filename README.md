@@ -2,6 +2,8 @@
 ### This entire repo is still under development. Pull requests to fix some of the outstading Issues would be appreciated, developers of all experience level welcome.
 This repo is developed based on the author's officially unofficial PyTorch BigGAN [implementation.](https://github.com/ajbrock/BigGAN-PyTorch)
 
+--------------BELOW is its original instruction--------------
+
 ![Dogball? Dogball!](imgs/header_image.jpg?raw=true "Dogball? Dogball!")
 
 
